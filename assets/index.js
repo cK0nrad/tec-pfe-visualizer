@@ -1496,7 +1496,6 @@ const connect = () => {
             console.log(marker == idx)
         }
 
-        markers[idx].openPopup();
         girouette.innerText = data.girouette;
     }
     ws.onclose = () => {
