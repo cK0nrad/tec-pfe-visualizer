@@ -1482,7 +1482,7 @@ const connect = () => {
 
         //lazy way of having direction
 
-        const idx = data.girouette == "[175] 175: OREYE" ? stops.stop_times.length - data.next_idx : data.next_idx;
+        const idx = data.girouette == "[175] 175: OREYE" ? stops.stop_times.length - 1 - data.next_idx : data.next_idx;
         for (const marker in markers) {
             const list = markers[marker]._icon.classList;
             if(marker == idx) {
@@ -1492,8 +1492,6 @@ const connect = () => {
 
             if(list.contains("huechange"))
                 list.remove("huechange");
-
-            console.log(marker == idx)
         }
 
         girouette.innerText = data.girouette;
