@@ -21,6 +21,7 @@ use tower_http::services::ServeDir;
 
 struct Store {
     position: RwLock<(f64, f64)>,
+    next_idx: RwLock<i64>,
     girouette: RwLock<String>,
 }
 impl Store {
@@ -28,7 +29,12 @@ impl Store {
         Self {
             position: RwLock::new((0.0, 0.0)),
             girouette: RwLock::new(String::from("")),
+            next_idx: RwLock::new(0),
         }
+    }
+
+    fn get_next_idx(&self) -> i64 {
+        *self.next_idx.read().unwrap()
     }
 
     fn get_position(&self) -> (f64, f64) {
@@ -45,13 +51,18 @@ impl Store {
         *self.girouette.write().unwrap() = girouette;
     }
 
+    fn set_next_idx(&self, idx: i64) {
+        *self.next_idx.write().unwrap() = idx;
+    }
+
     fn to_json(&self) -> String {
         let (lat, lon) = self.get_position();
         let girouette = self.get_girouette();
         let json = json!( {
             "lat": lat,
             "lon": lon,
-            "girouette": girouette
+            "girouette": girouette,
+            "next_idx": self.get_next_idx()
         });
         json.to_string()
     }
@@ -111,13 +122,16 @@ fn handle_client(mut stream: TcpStream, store: Arc<Store>) {
                 break;
             }
             Ok(size) => {
-                if size >= 8 {
+                if size >= 24 {
                     let lat = LittleEndian::read_f64(&buffer[0..8]);
                     let lon = LittleEndian::read_f64(&buffer[8..16]);
                     store.set_position(lat, lon);
 
-                    if size > 8 {
-                        let string_data = &buffer[16..size];
+                    let next_idx = LittleEndian::read_int(&buffer[16..24], 8);
+                    store.set_next_idx(next_idx);
+
+                    if size > 24 {
+                        let string_data = &buffer[24..size];
                         match String::from_utf8(string_data.to_vec()) {
                             Ok(s) => store.set_girouette(s),
                             Err(e) => eprintln!("Failed to read string: {}", e),

@@ -1442,16 +1442,19 @@ const stops = {
     "frequencies": []
 };
 
-const map = L.map('map').setView([50.696308, 5.477653], 16);
+const map = L.map('map').setView([50.728232, 5.351165], 14);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
+
+const markers = []
 for (const stop of stops.stop_times) {
     let t = L.marker([stop.stop.stop_lat, stop.stop.stop_lon]).addTo(map);
     t.bindPopup(stop.stop.stop_name);
+    markers.push(t);
 }
 
 
@@ -1469,12 +1472,31 @@ const girouette = document.getElementById("girouette");
 
 var ws;
 const connect = () => {
-    if(ws != null) ws.close();
+    if (ws != null) ws.close();
 
     ws = new WebSocket(`ws://${window.location.hostname}:3000/ws`);
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         bus.setLatLng([data.lat, data.lon]);
+        map.flyTo([data.lat, data.lon], 15);
+
+        //lazy way of having direction
+
+        const idx = data.girouette == "[175] 175: OREYE" ? stops.stop_times.length - data.next_idx : data.next_idx;
+        for (const marker in markers) {
+            const list = markers[marker]._icon.classList;
+            if(marker == idx) {
+                list.add("huechange");
+                continue
+            }
+
+            if(list.contains("huechange"))
+                list.remove("huechange");
+
+            console.log(marker == idx)
+        }
+
+        markers[idx].openPopup();
         girouette.innerText = data.girouette;
     }
     ws.onclose = () => {
