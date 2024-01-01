@@ -5,3 +5,7 @@
 Simple map with the bus position + bus display
 
 Nothing fancy, just getting data through websocket
+
+## TCP
+
+It contains a TCP server that will listen to the port 8080 and send the data to the websocket

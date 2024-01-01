@@ -135,7 +135,9 @@ fn handle_client(mut stream: TcpStream, store: Arc<Store>) {
 
 fn reader(store: Arc<Store>) -> std::io::Result<()> {
     let listener = TcpListener::bind("127.0.0.1:8080")?;
+    println!("Listening on port 8080");
     for stream in listener.incoming() {
+        println!("New client");
         match stream {
             Ok(stream) => {
                 let clone = Arc::clone(&store);
